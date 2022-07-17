@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <hex.h>
+
 #define ENQ 0x05  // ASCII 0x05 == ENQUIRY
 #define STX 0x02  // START OF T0xE0T
 #define ETX 0x03  // END OF T0xE0T
@@ -15,108 +17,161 @@
 #define TRUE 1
 #define FALSE 0
 
-const unsigned short table_regInstan[41] =
+const char *table_regInstan[42] =
     {
-        0xE000 /*Phase A voltage */,
-        0xE001 /*Phase B voltage */,
-        0xE002 /*Phase C voltage */,
-        0xE004 /*Phase A voltage offset*/,
-        0xE005 /*Phase B voltage offset*/,
-        0xE006 /*Phase C voltage offset*/,
-        0xE010 /*Phase A current */,
-        0xE011 /*Phase B current */,
-        0xE012 /*Phase C current */,
-        0xE014 /*Phase A current offset*/,
-        0xE015 /*Phase B current offset*/,
-        0xE016 /*Phase C current offset*/,
-        0xE020 /*Phase angle of A Phase (in degrees, +=lead, -=lag) */,
-        0xE021 /*Phase angle of B Phase (in degrees, +=lead, -=lag) */,
-        0xE022 /*Phase angle of C Phase (in degrees, +=lead, -=lag) */,
-        0xE024 /*Angle between VTA and VTB*/,
-        0xE025 /*Angle between VTA and VTC*/,
-        0xE026 /*Power factor */,
-        0xE027 /*Absolute angle of A Phase Current*/,
-        0xE028 /*Absolute angle of B Phase Current*/,
-        0xE029 /*Absolute angle of C Phase Current*/,
-        0xE02A /*Absolute angle of A Phase Voltage*/,
-        0xE02B /*Absolute angle of B Phase Voltage*/,
-        0xE02C /*Absolute angle of C Phase Voltage*/,
-        0xE030 /*A phase active total power (watts)*/,
-        0xE031 /*B phase active total power (watts)*/,
-        0xE032 /*C phase active total power (watts)*/,
-        0xE033 /*Total active total power (watts)*/,
-        0xE034 /*A phase active fundamental power (watts)*/,
-        0xE035 /*B phase active fundamental power (watts)*/,
-        0xE036 /*C phase active fundamental power (watts)*/,
-        0xE037 /*Total active fundamental power (watts) */,
-        0xE040 /*A phase reactive power (VArs)*/,
-        0xE041 /*B phase reactive power (VArs)*/,
-        0xE042 /*C phase reactive power (VArs)*/,
-        0xE043 /*Total reactive power (Vars)*/,
-        0xE050 /*A phase apparent power (VA)*/,
-        0xE051 /*B phase apparent power (VA)*/,
-        0xE052 /*C phase apparent power (VA)*/,
-        0xE053 /*Total apparent power (VA)*/,
-        0xE060 /*Frequency <50.01>*/,
+        "F010" /*TEST*/,
+        "E000" /*Phase A voltage */,
+        "E001" /*Phase B voltage */,
+        "E002" /*Phase C voltage */,
+        "E004" /*Phase A voltage offset*/,
+        "E005" /*Phase B voltage offset*/,
+        "E006" /*Phase C voltage offset*/,
+        "E010" /*Phase A current */,
+        "E011" /*Phase B current */,
+        "E012" /*Phase C current */,
+        "E014" /*Phase A current offset*/,
+        "E015" /*Phase B current offset*/,
+        "E016" /*Phase C current offset*/,
+        "E020" /*Phase angle of A Phase (in degrees, +=lead, -=lag) */,
+        "E021" /*Phase angle of B Phase (in degrees, +=lead, -=lag) */,
+        "E022" /*Phase angle of C Phase (in degrees, +=lead, -=lag) */,
+        "E024" /*Angle between VTA and VTB*/,
+        "E025" /*Angle between VTA and VTC*/,
+        "E026" /*Power factor */,
+        "E027" /*Absolute angle of A Phase Current*/,
+        "E028" /*Absolute angle of B Phase Current*/,
+        "E029" /*Absolute angle of C Phase Current*/,
+        "E02A" /*Absolute angle of A Phase Voltage*/,
+        "E02B" /*Absolute angle of B Phase Voltage*/,
+        "E02C" /*Absolute angle of C Phase Voltage*/,
+        "E030" /*A phase active total power (watts)*/,
+        "E031" /*B phase active total power (watts)*/,
+        "E032" /*C phase active total power (watts)*/,
+        "E033" /*Total active total power (watts)*/,
+        "E034" /*A phase active fundamental power (watts)*/,
+        "E035" /*B phase active fundamental power (watts)*/,
+        "E036" /*C phase active fundamental power (watts)*/,
+        "E037" /*Total active fundamental power (watts) */,
+        "E040" /*A phase reactive power (VArs)*/,
+        "E041" /*B phase reactive power (VArs)*/,
+        "E042" /*C phase reactive power (VArs)*/,
+        "E043" /*Total reactive power (Vars)*/,
+        "E050" /*A phase apparent power (VA)*/,
+        "E051" /*B phase apparent power (VA)*/,
+        "E052" /*C phase apparent power (VA)*/,
+        "E053" /*Total apparent power (VA)*/,
+        "E060" /*Frequency <50.01>*/,
 };
 
-const unsigned short table_regPowerMeas[18] =
+const char *table_regPowerMeas[18] =
     {
-        0xE007 /*Phase A fundamental voltage */,
-        0xE008 /*Phase B fundamental voltage */,
-        0xE009 /*Phase C fundamental voltage */,
-        0xE00A /*Phase A voltage 100*(RMS-Fund)/(Fund)*/,
-        0xE00B /*Phase B voltage 100*(RMS-Fund)/(Fund)*/,
-        0xE00C /*Phase C voltage 100*(RMS-Fund)/(Fund)*/,
-        0xE00D /*Voltage Zero Sequence */,
-        0xE00E /*Voltage Positive Sequence */,
-        0xE00F /*Voltage Negative Sequence */,
-        0xE017 /*Phase A fundamental current */,
-        0xE018 /*Phase B fundamental current */,
-        0xE019 /*Phase C fundamental current */,
-        0xE01A /*Phase A current 100*(RMS-Fund)/(Fund)*/,
-        0xE01B /*Phase B current 100*(RMS-Fund)/(Fund)*/,
-        0xE01C /*Phase C current 100*(RMS-Fund)/(Fund)*/,
-        0xE01D /*Current Zero Sequence */,
-        0xE01E /*Current Positive Sequence */,
-        0xE01F /*Current Negative Sequence */
+        "E007" /*Phase A fundamental voltage */,
+        "E008" /*Phase B fundamental voltage */,
+        "E009" /*Phase C fundamental voltage */,
+        "E00A" /*Phase A voltage 100*(RMS-Fund)/(Fund)*/,
+        "E00B" /*Phase B voltage 100*(RMS-Fund)/(Fund)*/,
+        "E00C" /*Phase C voltage 100*(RMS-Fund)/(Fund)*/,
+        "E00D" /*Voltage Zero Sequence */,
+        "E00E" /*Voltage Positive Sequence */,
+        "E00F" /*Voltage Negative Sequence */,
+        "E017" /*Phase A fundamental current */,
+        "E018" /*Phase B fundamental current */,
+        "E019" /*Phase C fundamental current */,
+        "E01A" /*Phase A current 100*(RMS-Fund)/(Fund)*/,
+        "E01B" /*Phase B current 100*(RMS-Fund)/(Fund)*/,
+        "E01C" /*Phase C current 100*(RMS-Fund)/(Fund)*/,
+        "E01D" /*Current Zero Sequence */,
+        "E01E" /*Current Positive Sequence */,
+        "E01F" /*Current Negative Sequence */
 };
 
-const unsigned short table_regEnergy[32] =
+const char *table_regEnergy[32] =
     {
-        0xE090 /* A phase import Wh */,
-        0xE091 /* B phase import Wh */,
-        0xE092 /* C phase import Wh */,
-        0xE093 /* Total import Wh */,
-        0xE094 /* A phase 0xE0port Wh */,
-        0xE095 /* B phase export Wh */,
-        0xE096 /* C phase export Wh */,
-        0xE097 /* Total export Wh */,
-        0xE098 /* A phase import varh */,
-        0xE099 /* B phase import varh */,
-        0xE09A /* C phase import varh */,
-        0xE09B /* Total import varh */,
-        0xE09C /* A phase export varh */,
-        0xE09D /* B phase export varh */,
-        0xE09E /* C phase export varh */,
-        0xE09F /* Total export varh */,
-        0xE0E0 /* A phase import Vah */,
-        0xE0E1 /* B phase import Vah */,
-        0xE0E2 /* C phase import Vah */,
-        0xE0E3 /* Total import Vah */,
-        0xE0E4 /* A phase export Vah */,
-        0xE0E5 /* B phase export Vah */,
-        0xE0E6 /* C phase export Vah */,
-        0xE0E7 /* Total export Vah */,
-        0xE0E8 /* A ph fund import Wh */,
-        0xE0E9 /* B ph fund import Wh */,
-        0xE0EA /* C ph fund import Wh */,
-        0xE0EB /* Total fund import Wh */,
-        0xE0EC /* A ph fund export Wh */,
-        0xE0ED /* B ph fund export Wh */,
-        0xE0EE /* C ph fund export Wh */,
-        0xE0EF /* Total fund export Wh */,
+        "E090" /* A phase import Wh */,
+        "E091" /* B phase import Wh */,
+        "E092" /* C phase import Wh */,
+        "E093" /* Total import Wh */,
+        "E094" /* A phase 0xE0port Wh */,
+        "E095" /* B phase export Wh */,
+        "E096" /* C phase export Wh */,
+        "E097" /* Total export Wh */,
+        "E098" /* A phase import varh */,
+        "E099" /* B phase import varh */,
+        "E09A" /* C phase import varh */,
+        "E09B" /* Total import varh */,
+        "E09C" /* A phase export varh */,
+        "E09D" /* B phase export varh */,
+        "E09E" /* C phase export varh */,
+        "E09F" /* Total export varh */,
+        "E0E0" /* A phase import Vah */,
+        "E0E1" /* B phase import Vah */,
+        "E0E2" /* C phase import Vah */,
+        "E0E3" /* Total import Vah */,
+        "E0E4" /* A phase export Vah */,
+        "E0E5" /* B phase export Vah */,
+        "E0E6" /* C phase export Vah */,
+        "E0E7" /* Total export Vah */,
+        "E0E8" /* A ph fund import Wh */,
+        "E0E9" /* B ph fund import Wh */,
+        "E0EA" /* C ph fund import Wh */,
+        "E0EB" /* Total fund import Wh */,
+        "E0EC" /* A ph fund export Wh */,
+        "E0ED" /* B ph fund export Wh */,
+        "E0EE" /* C ph fund export Wh */,
+        "E0EF" /* Total fund export Wh */,
 };
+
+byte nibble(char c)
+{
+  if (c >= '0' && c <= '9')
+    return c - '0';
+
+  if (c >= 'a' && c <= 'f')
+    return c - 'a' + 10;
+
+  if (c >= 'A' && c <= 'F')
+    return c - 'A' + 10;
+
+  return 0; // Not a valid hexadecimal character
+}
+
+void hexCharacterStringToBytes(byte *byteArray, const char *hexString)
+{
+  bool oddLength = strlen(hexString) & 1;
+  byte currentByte = 0;
+  byte byteIndex = 0;
+  for (byte charIndex = 0; charIndex < strlen(hexString); charIndex++)
+  {
+    bool oddCharIndex = charIndex & 1;
+    if (oddLength)
+    {
+      if (oddCharIndex)
+      {
+        currentByte = nibble(hexString[charIndex]) << 4;
+      }
+      else
+      {
+        currentByte |= nibble(hexString[charIndex]);
+        byteArray[byteIndex++] = currentByte;
+        currentByte = 0;
+      }
+    }
+    else
+    {
+      if (!oddCharIndex)
+      {
+        currentByte = nibble(hexString[charIndex]) << 4;
+      }
+      else
+      {
+        currentByte |= nibble(hexString[charIndex]);
+        byteArray[byteIndex++] = currentByte;
+        currentByte = 0;
+      }
+    }
+  }
+}
+
 short gencrc_16(short i)
 {
   short j;
@@ -194,11 +249,10 @@ void send_cmd(unsigned char *cmd, unsigned short len)
 
 // READ REGISTER COMMAND 'R'
 // unsgined char register ==>> F0 02 -> 0xF0 0x02
-void cmd_readRegister(String reg)
+void cmd_readRegister(const byte *reg)
 {
-  // unsigned char command[2];
-  // command[0] = reg.substring(0, 2);
-  // command[0] = reg.substring(1, 2);
+  unsigned char readReg[3] = {0x52, reg[0], reg[1]};
+  send_cmd(readReg, sizeof(readReg));
 }
 
 // RECEIVE FROM KWH
@@ -265,7 +319,10 @@ char get_cmd(unsigned char *cmd_data, unsigned short *len,
   return (FALSE);
 }
 
-unsigned char command[3] = {0x52, 0xF0, 0x02};
+unsigned char command[3] = {0x52, 0xE0, 0x90};
+unsigned char command2[3] = {0x52, 0xF0, 0x10};
+const byte sizeRegTable = 2;
+byte regTable[sizeRegTable] = {0};
 
 void setup()
 {
@@ -273,6 +330,13 @@ void setup()
 }
 void loop()
 {
-  send_cmd(command, sizeof(command));
+  send_cmd(command2, sizeof(command2));
   delay(1000);
+
+  for (int i = 0; i < 2; i++)
+  {
+    hexCharacterStringToBytes(regTable, table_regInstan[i]);
+    cmd_readRegister(regTable);
+    delay(1000);
+  }
 }
