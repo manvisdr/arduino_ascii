@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "Countimer.h"
 #include <hex.h>
 
 #define ENQ 0x05  // ASCII 0x05 == ENQUIRY
@@ -17,6 +18,8 @@
 #define TRUE 1
 #define FALSE 0
 
+unsigned char logonReg[15] = {0x4C, 0x45, 0x44, 0x4D, 0x49, 0x2C, 0x49, 0x4D, 0x44, 0x45, 0x49, 0x4D, 0x44, 0x45, 0x00};
+unsigned char logoffReg[1] = {0x58};
 const char *table_regInstan[42] =
     {
         "F010" /*TEST*/,
@@ -85,40 +88,27 @@ const char *table_regPowerMeas[18] =
         "E01F" /*Current Negative Sequence */
 };
 
-const char *table_regEnergy[32] =
+// const char *table_regEnergy[32] =
+//     {
+
+// };
+
+const char *table_mainReg[1] =
     {
-        "E090" /* A phase import Wh */,
-        "E091" /* B phase import Wh */,
-        "E092" /* C phase import Wh */,
-        "E093" /* Total import Wh */,
-        "E094" /* A phase 0xE0port Wh */,
-        "E095" /* B phase export Wh */,
-        "E096" /* C phase export Wh */,
-        "E097" /* Total export Wh */,
-        "E098" /* A phase import varh */,
-        "E099" /* B phase import varh */,
-        "E09A" /* C phase import varh */,
-        "E09B" /* Total import varh */,
-        "E09C" /* A phase export varh */,
-        "E09D" /* B phase export varh */,
-        "E09E" /* C phase export varh */,
-        "E09F" /* Total export varh */,
-        "E0E0" /* A phase import Vah */,
-        "E0E1" /* B phase import Vah */,
-        "E0E2" /* C phase import Vah */,
-        "E0E3" /* Total import Vah */,
-        "E0E4" /* A phase export Vah */,
-        "E0E5" /* B phase export Vah */,
-        "E0E6" /* C phase export Vah */,
-        "E0E7" /* Total export Vah */,
-        "E0E8" /* A ph fund import Wh */,
-        "E0E9" /* B ph fund import Wh */,
-        "E0EA" /* C ph fund import Wh */,
-        "E0EB" /* Total fund import Wh */,
-        "E0EC" /* A ph fund export Wh */,
-        "E0ED" /* B ph fund export Wh */,
-        "E0EE" /* C ph fund export Wh */,
-        "E0EF" /* Total fund export Wh */,
+        "F010" /*Serial Number*/,
+        // "1E01" /*CH1:KWH Total Rate A*/,
+        // "1E02" /*CH1:KWH Total Rate B*/,
+        // "1E03" /*CH1:KWH Total Rate C*/,
+        // "1E00" /*CH1:KWH Total Unified*/,
+};
+
+const char *table_mainRegStr[5] =
+    {
+        "Serial Number" /*Serial Number*/,
+        "CH1:KWH Total Rate A" /*CH1:KWH Total Rate A*/,
+        "CH1:KWH Total Rate B" /*CH1:KWH Total Rate B*/,
+        "CH1:KWH Total Rate C" /*CH1:KWH Total Rate C*/,
+        "CH1:KWH Total Unified" /*CH1:KWH Total*/,
 };
 
 byte nibble(char c)
@@ -199,7 +189,7 @@ CalculateCharacterCRC16(unsigned short crc, unsigned char c)
 // SEND TO KWH
 void cmdlink_putch(unsigned char ch)
 {
-  Serial.write(ch);
+  Serial2.write(ch);
 }
 
 void send_byte(unsigned char d)
@@ -245,6 +235,25 @@ void send_cmd(unsigned char *cmd, unsigned short len)
    * Add the ETX
    */
   cmdlink_putch(ETX);
+}
+
+bool cmd_trigMeter()
+{
+  cmdlink_putch(STX);
+  cmdlink_putch(ETX);
+  return true;
+}
+
+bool cmd_logonMeter()
+{
+  send_cmd(logonReg, sizeof(logonReg));
+  return true;
+}
+
+bool cmd_logoffMeter()
+{
+  send_cmd(logoffReg, sizeof(logoffReg));
+  return true;
 }
 
 // READ REGISTER COMMAND 'R'
@@ -319,24 +328,71 @@ char get_cmd(unsigned char *cmd_data, unsigned short *len,
   return (FALSE);
 }
 
+void tUpComplete()
+{
+  // Serial.println("tUp: DONE");
+  // digitalWrite(13, HIGH);
+  // tUp.restart();
+  // Serial.println("tUp: RESTART");
+  // digitalWrite(13, LOW);
+}
+
+// Countimer tUp;
 unsigned char command[3] = {0x52, 0xE0, 0x90};
 unsigned char command2[3] = {0x52, 0xF0, 0x10};
 const byte sizeRegTable = 2;
 byte regTable[sizeRegTable] = {0};
+char serIn;
+bool logonMeter = false;
+bool logoffMeter = true;
 
 void setup()
 {
   Serial.begin(9600);
+  Serial2.begin(9600);
+  // tUp.setCounter(0, 0, 10, tUp.COUNT_UP, tUpComplete);
 }
 void loop()
 {
-  send_cmd(command2, sizeof(command2));
-  delay(1000);
+  // tUp.run();
+  // tUp.start();
 
-  for (int i = 0; i < 2; i++)
+  // if(now - timeLastInput > TIME_OUT) {
+  //         Serial.println("Time out");
+  //         index = 0;
+  //         timeLastInput = now;
+  //     }
+
+
+  if (Serial2.available() && logonMeter)
   {
-    hexCharacterStringToBytes(regTable, table_regInstan[i]);
-    cmd_readRegister(regTable);
-    delay(1000);
+    Serial.println("LOGON READ METER");
+    for (int i = 0; i < sizeof(table_mainReg); i++)
+    {
+      hexCharacterStringToBytes(regTable, table_mainReg[i]);
+      if (Serial2.available())
+      {
+        cmd_readRegister(regTable);
+        while (Serial2.available() > 0)
+        {
+          serIn = Serial2.read();   // read Serial
+          Serial.print(serIn, HEX); // prints the character just read
+        }
+      }
+      delay(1000);
+    }
+    logoffMeter = cmd_logoffMeter();
+  }
+  else if (Serial2.available() && logoffMeter)
+  {
+    Serial.println("LOGOFF TRY TO LOGON");
+    logonMeter = cmd_logonMeter();
+  }
+  else
+  {
+    Serial.println("SERIAL NOT AVAILABLE");
+    logonMeter = false;
+    logoffMeter = true;
+    cmd_trigMeter();
   }
 }
